@@ -11,9 +11,13 @@ export class Color extends Vector<4> {
   declare mul: (arg: Colorizable) => this;
   declare lerp: (destination: Colorizable, fraction: number) => this;
 
-  constructor(color: string | Buffer<4> | null) {
+  constructor(color?: string | Buffer<4>) {
     super([0, 0, 0, 0]);
     if (color) this.buffer = this._standardized(color);
+  }
+
+  get rgba() {
+    return `rgba( ${this.buffer.join(", ")} )`;
   }
 
   _standardized = (arg: Colorizable): Buffer<4> => {

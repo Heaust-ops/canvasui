@@ -19,7 +19,7 @@ export interface CanvasUIBaseStyle {
   /** for animation purposes */
   transition: Option<number>;
   /** null for normal, 'color-dodge', 'overlay' and stuff like that */
-  blend: Option<string>;
+  blend: Option<GlobalCompositeOperation>;
   /** is the given orientation */
   orientation: "inherit" | "absolute";
 }
@@ -31,11 +31,11 @@ const defaultCanvasUIBaseStyle = {
   scale: 1,
   width: 0,
   height: 0,
-  opacity: 0,
+  opacity: 1,
   pivot: [0, 0],
   transition: null,
   blend: null,
-  orientation: "absolute",
+  orientation: "inherit",
 } as CanvasUIBaseStyle;
 
 export class CanvasUIElement extends EventManager {
@@ -44,6 +44,8 @@ export class CanvasUIElement extends EventManager {
   id: string;
   parent: Option<CanvasUIElement>;
   dom: Option<CanvasUIDom>;
+  setCtxSettings: (ctx: CanvasRenderingContext2D) => void;
+  updateHooks: (((delay: number) => void) | null)[];
 
   constructor(
     style: Partial<CanvasUIBaseStyle & { right: number; bottom: number }>
@@ -62,6 +64,32 @@ export class CanvasUIElement extends EventManager {
 
     this.children = [];
     this.id = crypto.randomUUID();
+    this.setCtxSettings = () => {};
+    this.updateHooks = [];
+  }
+
+  _isMouseEventValid = () => {
+    return true;
+  };
+
+  hookUpdate = (updateFunction: (delay: number) => void) => {
+    const id = this.updateHooks.length;
+    this.updateHooks.push(updateFunction);
+    return id;
+  };
+
+  unhookUpdate = (id: number) => {
+    if (id >= 0 && id < this.updateHooks.length) this.updateHooks[id] = null;
+  };
+
+  get siblingIndex() {
+    if (!this.parent) return -1;
+
+    for (let i = 0; i < this.parent.children.length; i++) {
+      if (this.parent.children[i].id === this.id) return i;
+    }
+
+    return -1;
   }
 
   draw = (_ctx: CanvasRenderingContext2D): void => {
@@ -76,13 +104,18 @@ export class CanvasUIElement extends EventManager {
     );
   };
 
-  push(child: CanvasUIElement) {
+  appendChild(child: CanvasUIElement) {
+    child.dom = this.dom;
     child.parent = this;
     this.children.push(child);
   }
 
   private _canvasUIElementPreCycle = (ctx: CanvasRenderingContext2D) => {
     ctx.save();
+
+    ctx.globalAlpha = this.style.opacity;
+    if (this.style.blend) ctx.globalCompositeOperation = this.style.blend;
+
     ctx.resetTransform();
 
     ctx.translate(...this.center.buffer);
@@ -103,6 +136,12 @@ export class CanvasUIElement extends EventManager {
     this._canvasUIElementPreCycle(ctx);
 
     this.update(delay);
+
+    for (const updateHook of this.updateHooks) {
+      if (!updateHook) continue;
+      updateHook(delay);
+    }
+
     this.draw(ctx);
 
     /** Cycle the children that inherit before reversing transforms */

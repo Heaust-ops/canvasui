@@ -29,18 +29,38 @@ const resizeCanvas = () => {
 
 resizeCanvas();
 
+/**
+ * LIBRARY STUFF
+ */
+
 const dom = new CanvasUIDom(canvas, ctx);
 const { aspectCorrect } = dom;
 
 const testDiv = new CanvasUIDiv({
-  left: aspectCorrect(1).x,
-  top: 1,
+  left: aspectCorrect(20).x,
+  top: 20,
   width: aspectCorrect(50).x,
   height: 50,
-  rotation: 0,
-  pivot: [0, 0],
+  rotation: 45,
+  bgColor: "#79A99D",
+  borderColor: "#ffffff",
+  borderWidth: 5,
 });
+
+const testDiv2 = new CanvasUIDiv({
+  ...testDiv.style,
+  bgColor: "#DB9471",
+  rotation: 23,
+  opacity: 0.95,
+  blend: "overlay",
+});
+
+testDiv.appendChild(testDiv2);
 dom.appendChild(testDiv);
+
+/**
+ * LIBRARY STUFF END
+ */
 
 const resizeObserver = new ResizeObserver(() => setTimeout(resizeCanvas, 15));
 resizeObserver.observe(canvas);

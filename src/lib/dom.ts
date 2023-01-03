@@ -49,7 +49,11 @@ export class CanvasUIDom {
 
   readonly appendChild = (node: CanvasUIElement) => {
     node.dom = this;
+    this._traverseNode(node, (el) => {
+      el.dom = this;
+    });
     node.id = crypto.randomUUID();
+    node.style.orientation = "absolute";
     this.nodes.push(node);
   };
 
@@ -106,8 +110,9 @@ export class CanvasUIDom {
   };
 
   private _refreshPointer = (e: MouseEvent) => {
-    this.pointer.x = e.clientX;
-    this.pointer.y = e.clientY;
+    const { top, left } = this.canvas.getBoundingClientRect();
+    this.pointer.x = e.clientX - left;
+    this.pointer.y = e.clientY - top;
 
     Math.random() < 0.2 &&
       console.log("Mouse pointer is at:", ...this.pointer.buffer);
