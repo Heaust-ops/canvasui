@@ -1,0 +1,24 @@
+body {
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  background-color: #1e1e1e;
+}
+
+body canvas {
+  margin-left: auto;
+  margin-right: auto;
+  border: 2px solid teal;
+}
+
+@font-face {
+  font-family: brokenText;
+  src: url(/assets/visual/Initial_broken-Regular.ttf);
+}
+
+#typing_game_canvas {
+  width: min(40rem, 95%);
+}
