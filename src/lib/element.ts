@@ -22,6 +22,9 @@ export interface CanvasUIBaseStyle {
   blend: Option<GlobalCompositeOperation>;
   /** is the given orientation */
   orientation: "inherit" | "absolute";
+  cursor: Option<string>;
+  hover: Option<Partial<CanvasUIBaseStyle>>;
+  active: Option<Partial<CanvasUIBaseStyle>>;
 }
 
 const defaultCanvasUIBaseStyle = {
@@ -39,13 +42,14 @@ const defaultCanvasUIBaseStyle = {
 } as CanvasUIBaseStyle;
 
 export class CanvasUIElement extends EventManager {
+  private autoStyle: CanvasUIBaseStyle;
   style: CanvasUIBaseStyle;
   children: CanvasUIElement[];
   id: string;
   parent: Option<CanvasUIElement>;
   dom: Option<CanvasUIDom>;
   setCtxSettings: (ctx: CanvasRenderingContext2D) => void;
-  updateHooks: (((delay: number) => void) | null)[];
+  private updateHooks: (((delay: number) => void) | null)[];
 
   constructor(
     style: Partial<CanvasUIBaseStyle & { right: number; bottom: number }>
@@ -61,6 +65,7 @@ export class CanvasUIElement extends EventManager {
       ...baseStyles,
       ...inferred,
     };
+    this.autoStyle = this.style;
 
     this.children = [];
     this.id = crypto.randomUUID();
@@ -68,7 +73,28 @@ export class CanvasUIElement extends EventManager {
     this.updateHooks = [];
   }
 
-  _isMouseEventValid = () => {
+  protected _onMouseEnter = (_mouseCoords: Vector<2>) => {
+    this.autoStyle = this.style;
+    if (this.style.hover) this.style = { ...this.style, ...this.style.hover };
+    if (this.style.cursor) this.dom!.cursor = this.style.cursor;
+    this.onMouseEnter(_mouseCoords);
+  };
+
+  protected _onMouseExit = (_mouseCoords: Vector<2>) => {
+    this.dom!.cursor = "auto";
+    this.style = this.autoStyle;
+    this.onMouseExit(_mouseCoords);
+  };
+
+  _isMouseEventValid = (mouseCoords: Vector<2>) => {
+    const pivot = this.pivot;
+    const point = mouseCoords.clone.sub(this.center).sub(pivot);
+    point.angle += this.style.rotation;
+    point.add(pivot).sub(this.dimensions.mul(-0.5));
+
+    if (point.x! < 0 || point.x! > this.dimensions.x!) return false;
+    if (point.y! < 0 || point.y! > this.dimensions.y!) return false;
+
     return true;
   };
 
@@ -133,6 +159,9 @@ export class CanvasUIElement extends EventManager {
 
   readonly cycle = (ctx: CanvasRenderingContext2D, delay: number) => {
     if (!this.dom) return;
+
+    if (this.isActive) this.style = { ...this.style, ...this.style.active };
+
     this._canvasUIElementPreCycle(ctx);
 
     this.update(delay);

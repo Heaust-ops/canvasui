@@ -45,18 +45,28 @@ const testDiv = new CanvasUIDiv({
   bgColor: "#79A99D",
   borderColor: "#ffffff",
   borderWidth: 5,
+  cursor: "pointer",
+  hover: {
+    bgColor: "#CC7B1E",
+  },
+  active: {
+    bgColor: "#AF1ECC",
+  },
 });
 
-const testDiv2 = new CanvasUIDiv({
-  ...testDiv.style,
-  bgColor: "#DB9471",
-  rotation: 23,
-  opacity: 0.95,
-  blend: "overlay",
-});
+// const testDiv2 = new CanvasUIDiv({
+//   ...testDiv.style,
+//   bgColor: "#DB9471",
+//   rotation: 23,
+//   opacity: 0.95,
+//   blend: "overlay",
+// });
 
-testDiv.appendChild(testDiv2);
+// testDiv.appendChild(testDiv2);
+
 dom.appendChild(testDiv);
+
+dom.hookListeners();
 
 /**
  * LIBRARY STUFF END

@@ -2,12 +2,14 @@ import { Color } from "../../utils/color";
 import { Option } from "../../utils/types";
 import { CanvasUIBaseStyle, CanvasUIElement } from "../element";
 
-export interface CanvasUIDivStyle {
+export interface CanvasUIDivStyle extends CanvasUIBaseStyle {
   bgColor: Color | string;
   borderType: "dashed" | "dotted" | "line";
   borderRadius: Option<number>;
   borderWidth: number;
   borderColor: Color | string;
+  hover: Option<Partial<CanvasUIDivStyle>>;
+  active: Option<Partial<CanvasUIDivStyle>>;
 }
 
 const defaultStyles = {
@@ -18,22 +20,16 @@ const defaultStyles = {
 } as CanvasUIDivStyle;
 
 export class CanvasUIDiv extends CanvasUIElement {
-  declare style: CanvasUIDivStyle &
-    CanvasUIBaseStyle & { bgColor: Color; borderColor: Color };
+  declare style: CanvasUIDivStyle;
 
   constructor(
     style: Partial<
-      CanvasUIBaseStyle & {
+      CanvasUIDivStyle & {
         right: number;
         bottom: number;
-      } & CanvasUIDivStyle
+      }
     > = {}
   ) {
-    if (typeof style.bgColor === "string")
-      style.bgColor = new Color(style.bgColor);
-    if (typeof style.borderColor === "string")
-      style.borderColor = new Color(style.borderColor);
-
     style = {
       ...defaultStyles,
       ...style,
@@ -43,6 +39,11 @@ export class CanvasUIDiv extends CanvasUIElement {
   }
 
   readonly draw = (ctx: CanvasRenderingContext2D) => {
+    if (typeof this.style.bgColor === "string")
+      this.style.bgColor = new Color(this.style.bgColor);
+    if (typeof this.style.borderColor === "string")
+      this.style.borderColor = new Color(this.style.borderColor);
+
     ctx.fillStyle = this.style.bgColor.rgba;
     ctx.strokeStyle = this.style.borderColor.rgba;
     ctx.lineWidth = this.style.borderWidth;

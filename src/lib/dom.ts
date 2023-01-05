@@ -23,6 +23,10 @@ export class CanvasUIDom {
     };
   }
 
+  set cursor(arg: string) {
+    this.canvas.style.cursor = arg;
+  }
+
   readonly cycle = (delay: number) => {
     for (const node of this.nodes) node.cycle(this.ctx, delay);
 
@@ -111,29 +115,36 @@ export class CanvasUIDom {
 
   private _refreshPointer = (e: MouseEvent) => {
     const { top, left } = this.canvas.getBoundingClientRect();
-    this.pointer.x = e.clientX - left;
-    this.pointer.y = e.clientY - top;
+    const x = (e.clientX - left) * window.devicePixelRatio;
+    const y = (e.clientY - top) * window.devicePixelRatio;
 
-    Math.random() < 0.2 &&
-      console.log("Mouse pointer is at:", ...this.pointer.buffer);
+    if (x < 0 || x > this.canvas.width) return false;
+    if (y < 0 || y > this.canvas.height) return false;
+
+    this.pointer.x = x;
+    this.pointer.y = y;
+
+    // Math.random() < 0.2 &&
+    //   console.log("Mouse pointer is at:", ...this.pointer.buffer);
+    return true;
   };
 
   private _onMouseUp = (e: MouseEvent) => {
-    this._refreshPointer(e);
+    if (!this._refreshPointer(e)) return;
 
     /** run the event for all children  */
     for (const node of this.nodes) node._onMouseUp(this.pointer);
   };
 
   private _onMouseDown = (e: MouseEvent) => {
-    this._refreshPointer(e);
+    if (!this._refreshPointer(e)) return;
 
     /** run the event for all children  */
     for (const node of this.nodes) node._onMouseDown(this.pointer);
   };
 
   private _onMouseMove = (e: MouseEvent) => {
-    this._refreshPointer(e);
+    if (!this._refreshPointer(e)) return;
 
     /** run the event for all children  */
     for (const node of this.nodes) node._onMouseMove(this.pointer);

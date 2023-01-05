@@ -26,6 +26,23 @@ export class Vector<T extends number> {
     return this.buffer.slice() as Buffer<T>;
   }
 
+  get angle() {
+    if (this.buffer.length !== 2)
+      throw new Error("angle property only exits for 2D vectors");
+
+    if (!this.buffer[0]) return 90 * Math.sign(this.buffer[1]);
+    return (180 * Math.atan(this.buffer[1] / this.buffer[0])) / Math.PI;
+  }
+
+  set angle(deg: number) {
+    if (this.buffer.length !== 2)
+      throw new Error("angle property only exits for 2D vectors");
+
+    const mag = this.mag;
+    this.buffer[0] = mag * Math.cos((deg * Math.PI) / 180);
+    this.buffer[1] = mag * Math.sin((deg * Math.PI) / 180);
+  }
+
   lerp = (destination: Vectorizable<T>, fraction: number) => {
     const bufferA = this.array; /** preserving A */
     this.sub(destination).mul(-fraction); /** (A - B) * -t */
