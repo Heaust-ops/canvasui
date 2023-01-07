@@ -8,7 +8,7 @@ export interface CanvasUIBaseStyle {
   top: number;
   left: number;
   rotation: number;
-  scale: number;
+  scale: number | [number, number];
   /** Size */
   width: number;
   height: number;
@@ -194,7 +194,6 @@ export class CanvasUIElement extends EventManager {
   };
 
   /** Get stuff in vector format */
-
   get center() {
     return this.position.add(this.dimensions.div(2));
   }
@@ -216,6 +215,7 @@ export class CanvasUIElement extends EventManager {
     const { width, height } = this.style;
     return new Vector([width, height])
       .div(100)
-      .mul([this.dom!.canvas.width, this.dom!.canvas.height]) as Vector<2>;
+      .mul([this.dom!.canvas.width, this.dom!.canvas.height])
+      .mul(this.style.scale) as Vector<2>;
   }
 }
