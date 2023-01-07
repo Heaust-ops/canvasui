@@ -1,13 +1,19 @@
+import { Buffer } from "../utils/types";
 import { Vector } from "../utils/vector";
 import { CanvasUIElement } from "./element";
 
 export class CanvasUIDom {
   nodes: CanvasUIElement[];
+  pointer: Vector<2>;
   ctx: CanvasRenderingContext2D;
   canvas: HTMLCanvasElement;
-  pointer: Vector<2>;
   hotkeyStack: string[];
-  camera: { position: Vector<2>; rotation: number; scale: number };
+
+  /** DOM Camera */
+  camera: { position: Vector<2>; rotation: number; scale: Vector<2> };
+  cameraTransform!: DOMMatrix;
+
+  /** Handling cursor style states */
   currentCursor: string;
   revertCursor: boolean;
   standbyCursor: string;
@@ -24,8 +30,9 @@ export class CanvasUIDom {
     this.camera = {
       position: new Vector([0, 0]),
       rotation: 0,
-      scale: 1,
+      scale: new Vector([1, 1]),
     };
+    this._refreshCameraTransforms();
   }
 
   set cursor(arg: string) {
@@ -37,18 +44,11 @@ export class CanvasUIDom {
 
   readonly cycle = (delay: number) => {
     this.revertCursor = true;
-    for (const node of this.nodes) node.cycle(this.ctx, delay);
 
-    this.ctx.save();
-
-    this.ctx.resetTransform();
-    const { position, rotation, scale } = this.camera;
-
-    this.ctx.translate(...position.clone.mul(-1).buffer);
-    this.ctx.rotate(rotation);
-    this.ctx.scale(scale, scale);
-
-    this.ctx.restore();
+    for (const node of this.nodes) {
+      this.ctx.setTransform(this.cameraTransform);
+      node.cycle(this.ctx, delay);
+    }
 
     if (this.revertCursor) this.cursor = this.standbyCursor;
   };
@@ -68,7 +68,6 @@ export class CanvasUIDom {
       el.dom = this;
     });
     node.id = crypto.randomUUID();
-    node.style.orientation = "absolute";
     this.nodes.push(node);
   };
 
@@ -98,6 +97,55 @@ export class CanvasUIDom {
       this._traverseNode(node, func);
     }
   };
+
+  /**
+   * CAMERA TRANSFORMATIONS
+   */
+  set translation(arg: Buffer<2>) {
+    this.camera.position.buffer = arg;
+    this._refreshCameraTransforms();
+  }
+
+  set rotation(deg: number) {
+    this.camera.rotation = (Math.PI * deg) / 180;
+    this._refreshCameraTransforms();
+  }
+
+  set magnification(arg: number | Buffer<2>) {
+    this.camera.scale.buffer = [1, 1];
+    this.camera.scale.mul(arg);
+    this._refreshCameraTransforms();
+  }
+
+  translate(x: number, y: number) {
+    this.camera.position.add([x, y]);
+    this._refreshCameraTransforms();
+  }
+
+  rotate(deg: number) {
+    this.camera.rotation += (Math.PI * deg) / 180;
+    this._refreshCameraTransforms();
+  }
+
+  scale(x: number, y?: number) {
+    this.camera.scale.mul([x, y ?? x]);
+    this._refreshCameraTransforms();
+  }
+
+  _refreshCameraTransforms() {
+    this.ctx.save();
+
+    this.ctx.resetTransform();
+    const { position, rotation, scale } = this.camera;
+
+    this.ctx.translate(...position.array);
+    this.ctx.rotate(rotation);
+    this.ctx.scale(...scale.buffer);
+
+    this.cameraTransform = this.ctx.getTransform();
+
+    this.ctx.restore();
+  }
 
   /**
    * EVENT MANAGEMENT

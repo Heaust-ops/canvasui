@@ -72,9 +72,17 @@ export class CanvasUIElement extends EventManager {
   }
 
   _isMouseEventValid = (mouseCoords: Vector<2>) => {
+    if (!this.dom) return false;
+
     let isValid = true;
     const pivot = this.pivot;
-    const point = mouseCoords.clone.sub(this.center).sub(pivot);
+    const point = mouseCoords.clone;
+    const camTransform = this.dom.cameraTransform;
+    camTransform.e *= -1;
+    camTransform.f *= -1;
+    point.multiplyDomMatrix(camTransform);
+
+    point.sub(this.center).sub(pivot);
     point.angle += this.style.rotation;
     point.add(pivot).sub(this.dimensions.mul(-0.5));
 
@@ -83,6 +91,14 @@ export class CanvasUIElement extends EventManager {
 
     return isValid;
   };
+
+  traverseAncestry(func: (el: CanvasUIElement) => void) {
+    let node = this as Option<CanvasUIElement>;
+    while (node) {
+      func(node);
+      node = this.parent;
+    }
+  }
 
   hookUpdate = (updateFunction: (delay: number) => void) => {
     const id = this.updateHooks.length;
@@ -122,14 +138,7 @@ export class CanvasUIElement extends EventManager {
     this.children.push(child);
   }
 
-  private _canvasUIElementPreCycle = (ctx: CanvasRenderingContext2D) => {
-    ctx.save();
-
-    ctx.globalAlpha = this.style.opacity;
-    if (this.style.blend) ctx.globalCompositeOperation = this.style.blend;
-
-    ctx.resetTransform();
-
+  private _transformElement(ctx: CanvasRenderingContext2D) {
     ctx.translate(...this.center.buffer);
     const pivot = this.pivot;
 
@@ -137,6 +146,15 @@ export class CanvasUIElement extends EventManager {
     ctx.rotate((Math.PI / 180) * this.style.rotation); /** Rotate */
     ctx.translate(...pivot.mul(-1).buffer); /** Return back to center */
     ctx.translate(...this.dimensions.mul(-0.5).buffer); /** Go to top Left */
+  }
+
+  private _canvasUIElementPreCycle = (ctx: CanvasRenderingContext2D) => {
+    ctx.save();
+
+    ctx.globalAlpha = this.style.opacity;
+    if (this.style.blend) ctx.globalCompositeOperation = this.style.blend;
+
+    this._transformElement(ctx);
   };
 
   private _canvasUIElementPostCycle = (ctx: CanvasRenderingContext2D) => {
@@ -216,6 +234,11 @@ export class CanvasUIElement extends EventManager {
     return new Vector([width, height])
       .div(100)
       .mul([this.dom!.canvas.width, this.dom!.canvas.height])
-      .mul(this.style.scale) as Vector<2>;
+      .mul(this.style.scale)
+      .mul(
+        this.parent && this.style.orientation === "inherit"
+          ? [this.parent.style.width * 0.01, this.parent.style.height * 0.01]
+          : 1
+      ) as Vector<2>;
   }
 }

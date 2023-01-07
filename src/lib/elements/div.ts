@@ -1,11 +1,12 @@
 import { Color } from "../../utils/color";
-import { Option } from "../../utils/types";
+import { Buffer, Option } from "../../utils/types";
+import { Vector } from "../../utils/vector";
 import { CanvasUIBaseStyle, CanvasUIElement } from "../element";
 
 export interface CanvasUIDivStyle extends CanvasUIBaseStyle {
   bgColor: Color | string;
   borderType: "dashed" | "dotted" | "line";
-  borderRadius: Option<number>;
+  borderRadius: Option<number | Buffer<4>>;
   borderWidth: number;
   borderColor: Color | string;
   hover: Option<Partial<CanvasUIDivStyle>>;
@@ -38,6 +39,10 @@ export class CanvasUIDiv extends CanvasUIElement {
     super(style);
   }
 
+  get borderRadius() {
+    return new Vector([0, 0, 0, 0]).add(this.style.borderRadius ?? 0);
+  }
+
   readonly draw = (ctx: CanvasRenderingContext2D) => {
     if (typeof this.style.bgColor === "string")
       this.style.bgColor = new Color(this.style.bgColor);
@@ -46,7 +51,7 @@ export class CanvasUIDiv extends CanvasUIElement {
 
     ctx.fillStyle = this.style.bgColor.rgba;
     ctx.strokeStyle = this.style.borderColor.rgba;
-    ctx.lineWidth = this.style.borderWidth;
+    ctx.lineWidth = (this.style.borderWidth / 1080) * this.dom!.canvas.width;
 
     this.setCtxSettings(ctx);
     ctx.fillRect(0, 0, ...this.dimensions.buffer);

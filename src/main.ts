@@ -1,6 +1,12 @@
 import { CanvasUIDom } from "./lib/dom";
 import { CanvasUIDiv } from "./lib/elements/div";
+import { CanvasUIImage } from "./lib/elements/image";
 import "./style.css";
+
+const imageurl1 =
+  "https://upload.wikimedia.org/wikipedia/commons/e/eb/Ash_Tree_-_geograph.org.uk_-_590710.jpg";
+const imageurl2 =
+  "https://daily.jstor.org/wp-content/uploads/2020/06/why_you_should_learn_the_names_of_trees_1050x700.jpg";
 
 /** @type {HTMLCanvasElement} */
 const canvas = document.getElementById(
@@ -44,7 +50,7 @@ const testDiv = new CanvasUIDiv({
   rotation: 45,
   bgColor: "#79A99D",
   borderColor: "#ffffff",
-  borderWidth: 5,
+  borderWidth: 10,
   cursor: "grab",
   hover: {
     bgColor: "#CC7B1E",
@@ -52,20 +58,24 @@ const testDiv = new CanvasUIDiv({
   },
   active: {
     bgColor: "#AF1ECC",
-    width: 20,
+    scale: [0.5, 1],
     cursor: "grabbing",
   },
 });
 
-// const testDiv2 = new CanvasUIDiv({
-//   ...testDiv.style,
-//   bgColor: "#DB9471",
-//   rotation: 23,
-//   opacity: 0.95,
-//   blend: "overlay",
-// });
+const testImage = new CanvasUIImage(imageurl1, {
+  top: 0,
+  left: 0,
+  width: 100,
+  height: 100,
+  rotation: 23,
+  orientation: "inherit",
+}).preload([imageurl2]);
 
-// testDiv.appendChild(testDiv2);
+testDiv.appendChild(testImage);
+testDiv.onClick = () => {
+  testImage.src = testImage.src === imageurl2 ? imageurl1 : imageurl2;
+};
 
 dom.appendChild(testDiv);
 
@@ -89,6 +99,10 @@ const animate = () => {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   prevTime = Date.now();
+  // dom.translate(
+  //   10 * Math.sin(Date.now() / 100),
+  //   10 * Math.cos(Date.now() / 100)
+  // );
   dom.cycle(delta);
 };
 

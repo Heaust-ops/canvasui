@@ -3,6 +3,7 @@ import { Vector } from "../utils/vector";
 export class EventManager {
   isHovered: boolean;
   isActive: boolean;
+
   onMouseUp: (mouseCoords: Vector<2>) => void;
   onMouseDown: (mouseCoords: Vector<2>) => void;
   onMouseMove: (mouseCoords: Vector<2>) => void;
@@ -13,6 +14,7 @@ export class EventManager {
   onClick: (mouseCoords: Vector<2>) => void;
   onKeyDown: (key: string, hotkeyStack: string[]) => void;
   onKeyUp: (key: string, hotkeyStack: string[]) => void;
+
   protected _onClickCounter: Boolean;
 
   constructor() {

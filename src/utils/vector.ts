@@ -100,6 +100,19 @@ export class Vector<T extends number> {
     return this;
   };
 
+  multiplyDomMatrix(matrix: DOMMatrix) {
+    if (this.buffer.length !== 2)
+      throw new Error("DOM Matrix can only be multiplied to 2D Vectors");
+
+    const { a, b, c, d, e, f } = matrix;
+    const x = a * this.buffer[0] + c * this.buffer[1] + e;
+    const y = b * this.buffer[0] + d * this.buffer[1] + f;
+    this.buffer[0] = x;
+    this.buffer[1] = y;
+
+    return this;
+  }
+
   /**
    * Ease of use accessors, xyzw
    */
