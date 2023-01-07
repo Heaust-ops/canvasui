@@ -8,6 +8,9 @@ export class CanvasUIDom {
   pointer: Vector<2>;
   hotkeyStack: string[];
   camera: { position: Vector<2>; rotation: number; scale: number };
+  currentCursor: string;
+  revertCursor: boolean;
+  standbyCursor: string;
 
   constructor(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) {
     this.nodes = [];
@@ -15,6 +18,8 @@ export class CanvasUIDom {
     this.ctx = ctx;
     this.pointer = new Vector([-1, -1]);
     this.hotkeyStack = [];
+    this.currentCursor = this.standbyCursor = "auto";
+    this.revertCursor = true;
 
     this.camera = {
       position: new Vector([0, 0]),
@@ -24,10 +29,14 @@ export class CanvasUIDom {
   }
 
   set cursor(arg: string) {
-    this.canvas.style.cursor = arg;
+    if (arg !== this.currentCursor) {
+      this.canvas.style.cursor = arg;
+      this.currentCursor = arg;
+    }
   }
 
   readonly cycle = (delay: number) => {
+    this.revertCursor = true;
     for (const node of this.nodes) node.cycle(this.ctx, delay);
 
     this.ctx.save();
@@ -40,6 +49,8 @@ export class CanvasUIDom {
     this.ctx.scale(scale, scale);
 
     this.ctx.restore();
+
+    if (this.revertCursor) this.cursor = this.standbyCursor;
   };
 
   aspectCorrect = (arg: number) => {

@@ -45,12 +45,15 @@ const testDiv = new CanvasUIDiv({
   bgColor: "#79A99D",
   borderColor: "#ffffff",
   borderWidth: 5,
-  cursor: "pointer",
+  cursor: "grab",
   hover: {
     bgColor: "#CC7B1E",
+    rotation: 0,
   },
   active: {
     bgColor: "#AF1ECC",
+    width: 20,
+    cursor: "grabbing",
   },
 });
 

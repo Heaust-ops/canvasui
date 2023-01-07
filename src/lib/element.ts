@@ -42,7 +42,6 @@ const defaultCanvasUIBaseStyle = {
 } as CanvasUIBaseStyle;
 
 export class CanvasUIElement extends EventManager {
-  private autoStyle: CanvasUIBaseStyle;
   style: CanvasUIBaseStyle;
   children: CanvasUIElement[];
   id: string;
@@ -65,7 +64,6 @@ export class CanvasUIElement extends EventManager {
       ...baseStyles,
       ...inferred,
     };
-    this.autoStyle = this.style;
 
     this.children = [];
     this.id = crypto.randomUUID();
@@ -73,29 +71,17 @@ export class CanvasUIElement extends EventManager {
     this.updateHooks = [];
   }
 
-  protected _onMouseEnter = (_mouseCoords: Vector<2>) => {
-    this.autoStyle = this.style;
-    if (this.style.hover) this.style = { ...this.style, ...this.style.hover };
-    if (this.style.cursor) this.dom!.cursor = this.style.cursor;
-    this.onMouseEnter(_mouseCoords);
-  };
-
-  protected _onMouseExit = (_mouseCoords: Vector<2>) => {
-    this.dom!.cursor = "auto";
-    this.style = this.autoStyle;
-    this.onMouseExit(_mouseCoords);
-  };
-
   _isMouseEventValid = (mouseCoords: Vector<2>) => {
+    let isValid = true;
     const pivot = this.pivot;
     const point = mouseCoords.clone.sub(this.center).sub(pivot);
     point.angle += this.style.rotation;
     point.add(pivot).sub(this.dimensions.mul(-0.5));
 
-    if (point.x! < 0 || point.x! > this.dimensions.x!) return false;
-    if (point.y! < 0 || point.y! > this.dimensions.y!) return false;
+    if (point.x! < 0 || point.x! > this.dimensions.x!) isValid = false;
+    if (point.y! < 0 || point.y! > this.dimensions.y!) isValid = false;
 
-    return true;
+    return isValid;
   };
 
   hookUpdate = (updateFunction: (delay: number) => void) => {
@@ -157,10 +143,31 @@ export class CanvasUIElement extends EventManager {
     ctx.restore();
   };
 
+  private _handleCursorAndStyles() {
+    let cursor: string | null = null;
+
+    if (this.isHovered) {
+      if (this.style.cursor) cursor = this.style.cursor;
+      if (this.style.hover?.cursor) cursor = this.style.hover?.cursor;
+      this.style = { ...this.style, ...this.style.hover };
+    }
+
+    if (this.isActive) {
+      this.style = { ...this.style, ...this.style.active };
+      if (this.style.active?.cursor) cursor = this.style.active?.cursor;
+    }
+
+    if (cursor) {
+      this.dom!.cursor = cursor;
+      this.dom!.revertCursor = false;
+    }
+  }
+
   readonly cycle = (ctx: CanvasRenderingContext2D, delay: number) => {
     if (!this.dom) return;
 
-    if (this.isActive) this.style = { ...this.style, ...this.style.active };
+    const styleBackup = { ...this.style };
+    this._handleCursorAndStyles();
 
     this._canvasUIElementPreCycle(ctx);
 
@@ -183,6 +190,7 @@ export class CanvasUIElement extends EventManager {
     this._canvasUIElementPostCycle(ctx);
 
     for (const child of pending) child.cycle(ctx, delay);
+    this.style = styleBackup;
   };
 
   /** Get stuff in vector format */
