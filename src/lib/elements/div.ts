@@ -37,6 +37,7 @@ export class CanvasUIDiv extends CanvasUIElement {
     };
 
     super(style);
+    this._nodeType = "div";
   }
 
   get borderRadius() {

@@ -39,6 +39,7 @@ export class CanvasUIImage extends CanvasUIElement {
     };
 
     super(style);
+    this._nodeType = "image";
 
     this._preloaded = {};
     this._src = src;
@@ -122,6 +123,7 @@ export class CanvasUIImage extends CanvasUIElement {
   }
 
   readonly draw = (ctx: CanvasRenderingContext2D) => {
+
     if (typeof this.style.borderColor === "string")
       this.style.borderColor = new Color(this.style.borderColor);
 

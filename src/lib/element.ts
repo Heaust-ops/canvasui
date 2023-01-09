@@ -47,6 +47,7 @@ export class CanvasUIElement extends EventManager {
   id: string;
   parent: Option<CanvasUIElement>;
   dom: Option<CanvasUIDom>;
+  protected _nodeType: string;
   setCtxSettings: (ctx: CanvasRenderingContext2D) => void;
   private updateHooks: (((delay: number) => void) | null)[];
   private _domMatrix: DOMMatrix;
@@ -71,19 +72,39 @@ export class CanvasUIElement extends EventManager {
     this.setCtxSettings = () => {};
     this.updateHooks = [];
     this._domMatrix = new DOMMatrix();
+    this._nodeType = "primitive";
+  }
+
+  get siblingIndex() {
+    if (!this.parent) return -1;
+
+    for (let i = 0; i < this.parent.children.length; i++) {
+      if (this.parent.children[i].id === this.id) return i;
+    }
+
+    return -1;
+  }
+
+  get nodeType() {
+    return this._nodeType;
   }
 
   _isMouseEventValid = (mouseCoords: Vector<2>) => {
     if (!this.dom) return false;
-    
-    let isValid = true;
+
     const point = mouseCoords.clone;
     point.divideDomMatrix(this._domMatrix);
 
-    if (point.x! < 0 || point.x! > this.dimensions.x!) isValid = false;
-    if (point.y! < 0 || point.y! > this.dimensions.y!) isValid = false;
+    if (
+      point.x! < 0 ||
+      point.x! > this.dimensions.x! ||
+      point.y! < 0 ||
+      point.y! > this.dimensions.y!
+    ) {
+      return false;
+    }
 
-    return isValid;
+    return true;
   };
 
   traverseAncestry(func: (el: CanvasUIElement) => void) {
@@ -103,16 +124,6 @@ export class CanvasUIElement extends EventManager {
   unhookUpdate = (id: number) => {
     if (id >= 0 && id < this.updateHooks.length) this.updateHooks[id] = null;
   };
-
-  get siblingIndex() {
-    if (!this.parent) return -1;
-
-    for (let i = 0; i < this.parent.children.length; i++) {
-      if (this.parent.children[i].id === this.id) return i;
-    }
-
-    return -1;
-  }
 
   draw = (_ctx: CanvasRenderingContext2D): void => {
     throw new Error(
@@ -140,8 +151,6 @@ export class CanvasUIElement extends EventManager {
     ctx.rotate((Math.PI / 180) * this.style.rotation); /** Rotate */
     ctx.translate(...pivot.mul(-1).buffer); /** Return back to center */
     ctx.translate(...this.dimensions.mul(-0.5).buffer); /** Go to top Left */
-
-    this._domMatrix = ctx.getTransform();
   }
 
   private _canvasUIElementPreCycle = (ctx: CanvasRenderingContext2D) => {
@@ -192,6 +201,7 @@ export class CanvasUIElement extends EventManager {
       updateHook(delay);
     }
 
+    this._domMatrix = ctx.getTransform();
     this.draw(ctx);
 
     /** Cycle the children that inherit before reversing transforms */

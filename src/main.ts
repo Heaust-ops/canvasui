@@ -64,6 +64,21 @@ const testDiv = new CanvasUIDiv({
   },
 });
 
+const testDiv2 = new CanvasUIDiv({
+  top: 0,
+  left: 0,
+  width: 100,
+  bgColor: "#CDB66A",
+  height: 100,
+  rotation: 23,
+  orientation: "inherit",
+  borderRadius: [5, 10, 15, 20],
+  hover: {
+    scale: [1.5, 1],
+    bgColor: "#9D6ACD",
+  },
+});
+
 const testImage = new CanvasUIImage(imageurl1, {
   top: 0,
   left: 0,
@@ -72,16 +87,14 @@ const testImage = new CanvasUIImage(imageurl1, {
   rotation: 23,
   orientation: "inherit",
   borderRadius: [5, 10, 15, 20],
-  hover: {
-    scale: [1.5, 1]
-  },
 }).preload([imageurl2]);
 
-testDiv.appendChild(testImage);
 testImage.onClick = () => {
   testImage.src = testImage.src === imageurl2 ? imageurl1 : imageurl2;
 };
 
+// testDiv.appendChild(testDiv2);
+testDiv.appendChild(testImage);
 dom.appendChild(testDiv);
 
 dom.hookListeners();

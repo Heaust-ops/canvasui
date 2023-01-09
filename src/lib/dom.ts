@@ -205,21 +205,27 @@ export class CanvasUIDom {
     if (!this._refreshPointer(e)) return;
 
     /** run the event for all children  */
-    for (const node of this.nodes) node._onMouseUp(this.pointer);
+    this._traverseNodes((node) => {
+      node._onMouseUp(this.pointer);
+    });
   };
 
   private _onMouseDown = (e: MouseEvent) => {
     if (!this._refreshPointer(e)) return;
 
     /** run the event for all children  */
-    for (const node of this.nodes) node._onMouseDown(this.pointer);
+    this._traverseNodes((node) => {
+      node._onMouseDown(this.pointer);
+    });
   };
 
   private _onMouseMove = (e: MouseEvent) => {
     if (!this._refreshPointer(e)) return;
 
     /** run the event for all children  */
-    for (const node of this.nodes) node._onMouseMove(this.pointer);
+    this._traverseNodes((node) => {
+      node._onMouseMove(this.pointer);
+    });
   };
 
   private _onKeyDown = (e: KeyboardEvent) => {
@@ -234,7 +240,9 @@ export class CanvasUIDom {
     this.hotkeyStack.push(targetKey);
 
     /** run the event for all children  */
-    for (const node of this.nodes) node._onKeyDown(e.key, this.hotkeyStack);
+    this._traverseNodes((node) => {
+      node._onKeyDown(e.key, this.hotkeyStack);
+    });
   };
 
   private _onKeyUp = (e: KeyboardEvent) => {
@@ -243,6 +251,8 @@ export class CanvasUIDom {
       this.hotkeyStack = this.hotkeyStack.filter((el) => el !== targetKey);
 
     /** run the event for all children  */
-    for (const node of this.nodes) node._onKeyUp(e.key, this.hotkeyStack);
+    this._traverseNodes((node) => {
+      node._onKeyUp(e.key, this.hotkeyStack);
+    });
   };
 }
