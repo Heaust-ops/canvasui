@@ -1,3 +1,4 @@
+import { inverse_3x3 } from "./math";
 import { Buffer, Tuple } from "./types";
 
 export type Vectorizable<T extends number> = Vector<T> | Buffer<T> | number;
@@ -107,6 +108,29 @@ export class Vector<T extends number> {
     const { a, b, c, d, e, f } = matrix;
     const x = a * this.buffer[0] + c * this.buffer[1] + e;
     const y = b * this.buffer[0] + d * this.buffer[1] + f;
+    this.buffer[0] = x;
+    this.buffer[1] = y;
+
+    return this;
+  }
+
+  divideDomMatrix(matrix: DOMMatrix) {
+    if (this.buffer.length !== 2)
+      throw new Error("DOM Matrix can only be multiplied to 2D Vectors");
+
+    const { a, b, c, d, e, f } = matrix;
+    const inverted = inverse_3x3([
+      [a, c, e],
+      [b, d, f],
+      [0, 0, 1],
+    ]);
+    if (!inverted) return this;
+    const [Q, W, _] = inverted;
+    const [A, C, E] = Q;
+    const [B, D, F] = W;
+
+    const x = A * this.buffer[0] + C * this.buffer[1] + E;
+    const y = B * this.buffer[0] + D * this.buffer[1] + F;
     this.buffer[0] = x;
     this.buffer[1] = y;
 

@@ -101,14 +101,27 @@ export class CanvasUIDom {
   /**
    * CAMERA TRANSFORMATIONS
    */
+
+  get translation() {
+    return this.camera.position.array;
+  }
+
   set translation(arg: Buffer<2>) {
     this.camera.position.buffer = arg;
     this._refreshCameraTransforms();
   }
 
+  get rotation() {
+    return (this.camera.rotation * 180) / Math.PI;
+  }
+
   set rotation(deg: number) {
     this.camera.rotation = (Math.PI * deg) / 180;
     this._refreshCameraTransforms();
+  }
+
+  get magnification() {
+    return this.camera.scale.array;
   }
 
   set magnification(arg: number | Buffer<2>) {

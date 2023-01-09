@@ -57,6 +57,42 @@ export class CanvasUIImage extends CanvasUIElement {
     return this._src;
   }
 
+  get borderRadius() {
+    return new Vector([0, 0, 0, 0])
+      .add(this.style.borderRadius ?? 0)
+      .mul(this.dimensions.x! / 100);
+  }
+
+  setBorderRadius(ctx: CanvasRenderingContext2D) {
+    if (!this.style.borderRadius) return;
+
+    const radius = this.borderRadius;
+
+    const [width, height] = this.dimensions.buffer;
+
+    // Set the border radii for each corner
+    const topLeftRadius = radius.r!;
+    const topRightRadius = radius.g!;
+    const bottomRightRadius = radius.b!;
+    const bottomLeftRadius = radius.a!;
+
+    // Set up the clip path
+    ctx.beginPath();
+    ctx.moveTo(topLeftRadius, 0);
+    ctx.lineTo(width - topRightRadius, 0);
+    ctx.quadraticCurveTo(width, 0, width, topRightRadius);
+    ctx.lineTo(width, height - bottomRightRadius);
+    ctx.quadraticCurveTo(width, height, width - bottomRightRadius, height);
+    ctx.lineTo(bottomLeftRadius, height);
+    ctx.quadraticCurveTo(0, height, 0, height - bottomLeftRadius);
+    ctx.lineTo(0, topLeftRadius);
+    ctx.quadraticCurveTo(0, 0, topLeftRadius, 0);
+    ctx.closePath();
+
+    // Apply the clip path to the context
+    ctx.clip();
+  }
+
   preload(urls: string[]) {
     for (const url of urls) {
       const canvas = document.createElement("canvas");
@@ -85,10 +121,6 @@ export class CanvasUIImage extends CanvasUIElement {
     img.src = this._src;
   }
 
-  get borderRadius() {
-    return new Vector([0, 0, 0, 0]).add(this.style.borderRadius ?? 0);
-  }
-
   readonly draw = (ctx: CanvasRenderingContext2D) => {
     if (typeof this.style.borderColor === "string")
       this.style.borderColor = new Color(this.style.borderColor);
@@ -96,6 +128,7 @@ export class CanvasUIImage extends CanvasUIElement {
     ctx.strokeStyle = this.style.borderColor.rgba;
     ctx.lineWidth = this.style.borderWidth;
 
+    this.setBorderRadius(ctx);
     this.setCtxSettings(ctx);
     ctx.drawImage(this.cache, 0, 0, ...this.dimensions.buffer);
     if (ctx.lineWidth) ctx.strokeRect(0, 0, ...this.dimensions.buffer);

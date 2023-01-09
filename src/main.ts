@@ -52,6 +52,7 @@ const testDiv = new CanvasUIDiv({
   borderColor: "#ffffff",
   borderWidth: 10,
   cursor: "grab",
+  borderRadius: [50, 10, 10, 25],
   hover: {
     bgColor: "#CC7B1E",
     rotation: 0,
@@ -70,10 +71,14 @@ const testImage = new CanvasUIImage(imageurl1, {
   height: 100,
   rotation: 23,
   orientation: "inherit",
+  borderRadius: [5, 10, 15, 20],
+  hover: {
+    scale: [1.5, 1]
+  },
 }).preload([imageurl2]);
 
 testDiv.appendChild(testImage);
-testDiv.onClick = () => {
+testImage.onClick = () => {
   testImage.src = testImage.src === imageurl2 ? imageurl1 : imageurl2;
 };
 
@@ -99,6 +104,8 @@ const animate = () => {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   prevTime = Date.now();
+  // dom.translation = [200, 0];
+  // dom.rotation = 45;
   // dom.translate(
   //   10 * Math.sin(Date.now() / 100),
   //   10 * Math.cos(Date.now() / 100)

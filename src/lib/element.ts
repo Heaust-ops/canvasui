@@ -49,6 +49,7 @@ export class CanvasUIElement extends EventManager {
   dom: Option<CanvasUIDom>;
   setCtxSettings: (ctx: CanvasRenderingContext2D) => void;
   private updateHooks: (((delay: number) => void) | null)[];
+  private _domMatrix: DOMMatrix;
 
   constructor(
     style: Partial<CanvasUIBaseStyle & { right: number; bottom: number }>
@@ -69,22 +70,15 @@ export class CanvasUIElement extends EventManager {
     this.id = crypto.randomUUID();
     this.setCtxSettings = () => {};
     this.updateHooks = [];
+    this._domMatrix = new DOMMatrix();
   }
 
   _isMouseEventValid = (mouseCoords: Vector<2>) => {
     if (!this.dom) return false;
-
+    
     let isValid = true;
-    const pivot = this.pivot;
     const point = mouseCoords.clone;
-    const camTransform = this.dom.cameraTransform;
-    camTransform.e *= -1;
-    camTransform.f *= -1;
-    point.multiplyDomMatrix(camTransform);
-
-    point.sub(this.center).sub(pivot);
-    point.angle += this.style.rotation;
-    point.add(pivot).sub(this.dimensions.mul(-0.5));
+    point.divideDomMatrix(this._domMatrix);
 
     if (point.x! < 0 || point.x! > this.dimensions.x!) isValid = false;
     if (point.y! < 0 || point.y! > this.dimensions.y!) isValid = false;
@@ -146,6 +140,8 @@ export class CanvasUIElement extends EventManager {
     ctx.rotate((Math.PI / 180) * this.style.rotation); /** Rotate */
     ctx.translate(...pivot.mul(-1).buffer); /** Return back to center */
     ctx.translate(...this.dimensions.mul(-0.5).buffer); /** Go to top Left */
+
+    this._domMatrix = ctx.getTransform();
   }
 
   private _canvasUIElementPreCycle = (ctx: CanvasRenderingContext2D) => {
